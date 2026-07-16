@@ -1,0 +1,78 @@
+[defaults]
+port = 22
+user = "root"
+secret_ref = "fleet_default"
+# Idle-read timeout (seconds): a command silent this long marks the host FAILED and
+# the fleet moves on. Heavy operations (install, package removal, service stop) get
+# 2x this value. Override per target by setting command_timeout on its entry.
+command_timeout = 60
+
+# [[targets]]
+# host = "10.10.34.118"
+
+# [[targets]]
+# host = "10.10.142.244"
+
+[[targets]]
+host = "10.10.140.238"  # CentOS_7.6
+
+[[targets]]
+host = "10.10.140.239"  # CentOS_7.7
+
+[[targets]]
+host = "10.10.140.242"  # CentOS_7.9
+
+[[targets]]
+host = "10.10.34.124"  # CULinux3.0-Kern5.10
+
+[[targets]]
+host = "10.10.34.132"  # EulerOS_2.0SP10-Kern4.18
+
+[[targets]]
+host = "10.10.34.125"  # HikOS-Kern5.10
+
+[[targets]]
+host = "10.10.34.126"  # Kylin-V10SP3-Kern4.19
+
+[[targets]]
+host = "10.10.34.129"  # NeoKylin7.6-Kern3.10
+
+[[targets]]
+host = "10.10.34.135"  # OracleLinux7.1-Kern3.8.13-55.1.6
+
+[[targets]]
+host = "10.10.34.119"  # OracleLinux7.5-Kern4.1
+
+[[targets]]
+host = "10.10.34.127"  # OracleLinux7.8-Kern3.10.0-1127
+
+[[targets]]
+host = "10.10.34.108"  # OracleLinux7.8-Kern4.14
+
+[[targets]]
+host = "10.10.34.109"  # OracleLinux7.9-Kern5.4.17-2011.6.2
+
+[[targets]]
+host = "10.10.34.123"  # OracleLinux8.2-Kern5.4
+
+[[targets]]
+host = "10.10.34.137"  # Rocky8.9-Kern4.18.0-513.5.1
+
+[[targets]]
+host = "10.10.34.120"  # Ubuntu18.04.2-Kern4.15
+
+[[targets]]
+host = "10.10.34.121"  # Ubuntu20.04.6-Kern5.4
+
+[[targets]]
+host = "10.10.34.114"  # Ubuntu22.04-Kern5.15
+
+[[targets]]
+host = "10.10.34.110"  # UOS20.1021a-Kern4.19.0-91.82.65
+
+# Excluded 2026-07-07: qdocsesubagent's netlink traffic panics the box via a
+# use-after-free in UOS's own deepin_netmonitor module (GPF in nl_recv_msg; three
+# vmcores under /var/crash/2026070700{50,139,215} on the host). Re-enable once the
+# vendors resolve the conflict.
+# [[targets]]
+# host = "10.10.34.122"  # UOS-Desktop-v20-Pro-Kern4.19

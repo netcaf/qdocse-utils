@@ -1,0 +1,10 @@
+[customer]
+url = "https://10.10.33.33:8888"
+unitname = "bicwaterloo0319"
+username = "yzhang@bicdroid.com"
+secret_ref = "csp_customer"
+
+[samgr]
+url = "https://10.10.33.33:8888"
+username = "yzhang@bicdroid.com"
+secret_ref = "csp_samgr"

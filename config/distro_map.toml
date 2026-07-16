@@ -1,0 +1,12 @@
+# Explicit mapping from a target's detected OS to the exact release-server distro directory name.
+# Add an entry here whenever target_inspector's heuristic match is "ambiguous" or "none" for a
+# real target. Key is (os_name, os_version) as read from the target's /etc/os-release.
+
+# Example only — replace with a verified mapping for your actual CentOS 7 targets.
+# Note: /etc/os-release's VERSION_ID on CentOS/RHEL is often just the major version ("7"),
+# so a single os_name/os_version key may need to map to several real targets; if minor
+# version matters, parse /etc/redhat-release as a finer-grained fallback in get_system_info().
+# [[mappings]]
+# os_name = "CentOS Linux"
+# os_version = "7"
+# distro = "CentOS_7.6"

@@ -1,0 +1,5 @@
+host = "10.10.140.30"
+port = 22
+user = "root"
+secret_ref = "release_server"
+base_path = "/archive/qdocse/release"

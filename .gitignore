@@ -1,0 +1,4 @@
+__pycache__/
+*.rpm
+config/secrets.toml
+/var/
