@@ -303,16 +303,26 @@ def _add_hosts_args(parser: argparse.ArgumentParser) -> None:
         help="Target hostname/IP (repeatable). Alternative to --all.",
     )
     parser.add_argument(
-        "-j", "--jobs", type=int, default=1, metavar="N",
+        "-j", "--jobs", type=int, nargs="?", const=0, default=1, metavar="N",
         help="Run up to N hosts concurrently (default: 1 = sequential; with N>1 each "
-        "streamed line carries a [host] prefix).",
+        "streamed line carries a [host] prefix). Bare -j or -j 0 means one thread per "
+        "host, i.e. every host at once.",
     )
 
 
 def _resolve_hosts(args: argparse.Namespace) -> list:
-    if args.all:
-        return [t["host"] for t in config.load_targets()]
-    return args.host
+    hosts = [t["host"] for t in config.load_targets()] if args.all else args.host
+    # Dedup, order-preserving: results are keyed by host, so a repeated --host would run
+    # the op twice against one target (concurrently, with -j) while only the last-written
+    # result decides the exit code -- a shadowed failure could still exit 0.
+    return list(dict.fromkeys(hosts))
+
+
+def _parallel_for(args: argparse.Namespace, hosts: list) -> int:
+    """Turns -j/--jobs into a worker count: 0 (bare -j) means one thread per host."""
+    if args.jobs == 0:
+        return max(1, len(hosts))
+    return max(1, args.jobs)
 
 
 def _cmd_status(args: argparse.Namespace) -> int:
@@ -331,13 +341,13 @@ def _cmd_status(args: argparse.Namespace) -> int:
         for line in lifecycle.format_status(info).splitlines():
             print(f"  {line}")
 
-    results = fleet_status(hosts, on_host_result=_print_one, parallel=max(1, args.jobs))
+    results = fleet_status(hosts, on_host_result=_print_one, parallel=_parallel_for(args, hosts))
     return 0 if all(r.get("error") is None for r in results.values()) else 1
 
 
 def _cmd_clean(args: argparse.Namespace) -> int:
     hosts = _resolve_hosts(args)
-    parallel = max(1, args.jobs)
+    parallel = _parallel_for(args, hosts)
     results = fleet_clean(
         hosts, elevation_file=args.elevation_file, force=args.force, parallel=parallel,
         on_progress=print, on_host_result=_print_host_result,
@@ -357,7 +367,7 @@ def _cmd_install(args: argparse.Namespace) -> int:
     except (RuntimeError, ValueError) as e:
         logger.error(str(e))
         return 1
-    parallel = max(1, args.jobs)
+    parallel = _parallel_for(args, hosts)
     results = fleet_install(
         hosts, args.version, build, source=args.source, parallel=parallel, on_progress=print,
         on_host_result=_print_host_result,
@@ -369,7 +379,7 @@ def _cmd_install(args: argparse.Namespace) -> int:
 
 def _cmd_activate(args: argparse.Namespace) -> int:
     hosts = _resolve_hosts(args)
-    parallel = max(1, args.jobs)
+    parallel = _parallel_for(args, hosts)
     results = fleet_activate(
         hosts, duration=args.duration, mode=args.mode, parallel=parallel, on_progress=print,
         on_host_result=_print_host_result,
@@ -387,7 +397,7 @@ def _cmd_provision(args: argparse.Namespace) -> int:
     except (RuntimeError, ValueError) as e:
         logger.error(str(e))
         return 1
-    parallel = max(1, args.jobs)
+    parallel = _parallel_for(args, hosts)
     results = fleet_provision(
         hosts, args.version, build, source=args.source, parallel=parallel, on_progress=print,
         on_host_result=_print_host_result,
