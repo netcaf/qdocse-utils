@@ -484,13 +484,6 @@ def find_package_for_target(
     return release.find_package(version, build, match.distro), match
 
 
-def _target_defaults(host: str) -> dict:
-    for target in config.load_targets():
-        if target.get("host") == host:
-            return target
-    return {}
-
-
 def _connect_kwargs(args: argparse.Namespace, defaults: dict, prefix: str) -> dict:
     """prefix is "" for commands that only ever connect to one host (dest/flag names
     unprefixed: --host/--port/...), or a real prefix (e.g. "target"/"rs") for commands that
@@ -538,7 +531,7 @@ def _cmd_remove(args: argparse.Namespace) -> int:
 
 
 def _cmd_info(args: argparse.Namespace) -> int:
-    target_kwargs = _connect_kwargs(args, _target_defaults(args.host), "")
+    target_kwargs = _connect_kwargs(args, config.find_target(args.host), "")
     with RemoteHost(**target_kwargs) as target:
         info = TargetInspector(target).get_system_info()
     print(info)
@@ -546,7 +539,7 @@ def _cmd_info(args: argparse.Namespace) -> int:
 
 
 def _cmd_reboot(args: argparse.Namespace) -> int:
-    target_kwargs = _connect_kwargs(args, _target_defaults(args.host), "")
+    target_kwargs = _connect_kwargs(args, config.find_target(args.host), "")
     host = target_kwargs["host"]
     print(f"Rebooting {host}...")
     if reboot_and_wait(target_kwargs, on_progress=print):
@@ -558,7 +551,7 @@ def _cmd_reboot(args: argparse.Namespace) -> int:
 
 def _cmd_match(args: argparse.Namespace) -> int:
     rs_defaults = config.load_release_server()
-    target_kwargs = _connect_kwargs(args, _target_defaults(args.target_host), "target")
+    target_kwargs = _connect_kwargs(args, config.find_target(args.target_host), "target")
     rs_kwargs = _connect_kwargs(args, rs_defaults, "rs")
     base_path = args.rs_base_path or rs_defaults.get("base_path")
     if not base_path:
@@ -615,7 +608,7 @@ def _cmd_download(args: argparse.Namespace) -> int:
                 print(f"{host}: {local_path}")
         return exit_code
 
-    target_kwargs = _connect_kwargs(args, _target_defaults(args.target_host), "target")
+    target_kwargs = _connect_kwargs(args, config.find_target(args.target_host), "target")
     with RemoteHost(**rs_kwargs) as rs_remote, RemoteHost(**target_kwargs) as target:
         rs = ReleaseServer(rs_remote, base_path=base_path)
         _, match = find_package_for_target(target, rs, args.version, args.build, distro_map)
@@ -629,7 +622,7 @@ def _cmd_download(args: argparse.Namespace) -> int:
 
 
 def _cmd_csp_match(args: argparse.Namespace) -> int:
-    target_kwargs = _connect_kwargs(args, _target_defaults(args.host), "")
+    target_kwargs = _connect_kwargs(args, config.find_target(args.host), "")
     csp = CSPSAMGR()
     if not csp.login():
         return 1
@@ -694,7 +687,7 @@ def _cmd_csp_download(args: argparse.Namespace) -> int:
             print(f"{host}: {local_path}")
         return exit_code
 
-    target_kwargs = _connect_kwargs(args, _target_defaults(args.host), "")
+    target_kwargs = _connect_kwargs(args, config.find_target(args.host), "")
     with RemoteHost(**target_kwargs) as target:
         pkg, match = find_package_from_csp(target, csp, args.version, args.build, distro_map)
         if pkg is None:

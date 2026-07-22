@@ -190,9 +190,21 @@ def add_target(host: str, port: Optional[int] = None, user: Optional[str] = None
     _write_toml("targets.toml", structure)
 
 
+def load_defaults() -> dict:
+    """Returns [defaults] from targets.toml merged with its secret: the connection profile
+    every target inherits, and all an ad-hoc host (no [[targets]] entry) connects with."""
+    structure = _load_toml("targets.toml")
+    return _resolve(structure.get("defaults", {}), _load_secrets())
+
+
 def find_target(host: str) -> dict:
-    """Returns the resolved target dict for host from targets.toml, or {} if not found."""
-    return next((t for t in load_targets() if t.get("host") == host), {})
+    """Returns the resolved target dict for host. A host without a [[targets]] entry
+    resolves to [defaults] alone, so any reachable machine can be targeted ad hoc with
+    the fleet-default credentials -- its entry just overrides nothing."""
+    for target in load_targets():
+        if target.get("host") == host:
+            return target
+    return {**load_defaults(), "host": host}
 
 
 def remove_target(host: str) -> None:
